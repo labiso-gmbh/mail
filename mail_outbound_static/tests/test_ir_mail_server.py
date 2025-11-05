@@ -72,40 +72,15 @@ class TestIrMailServer(TransactionCase, MockSmtplibCase):
             }
         )
 
-    def _send_mail(
-        self,
-        message,
-        mail_server_id=None,
-        smtp_server=None,
-        smtp_port=None,
-        smtp_user=None,
-        smtp_password=None,
-        smtp_encryption=None,
-        smtp_ssl_certificate=None,
-        smtp_ssl_private_key=None,
-        smtp_debug=False,
-        smtp_session=None,
-    ):
-        smtp = smtp_session
-        if not smtp:
-            smtp = self.IrMailServer.connect(
-                smtp_server,
-                smtp_port,
-                smtp_user,
-                smtp_password,
-                smtp_encryption,
-                smtp_from=message["From"],
-                ssl_certificate=smtp_ssl_certificate,
-                ssl_private_key=smtp_ssl_private_key,
-                smtp_debug=smtp_debug,
-                mail_server_id=mail_server_id,
-            )
-
-        send_from, send_to, message_string = self.IrMailServer._prepare_email_message(
-            message, smtp
-        )
-        self.IrMailServer.send_email(message)
-        return message_string
+    def _send_mail(self, message, mail_server_id=None):
+        """
+        This helper calls the real send_email method.
+        It's intended to be used inside a `mock_smtplib_connection`
+        context, which will prevent any real emails from being sent.
+        The message object is modified in-place and returned for inspection.
+        """
+        self.IrMailServer.send_email(message, mail_server_id=mail_server_id)
+        return message
 
     def test_send_email_injects_from_no_canonical(self):
         """It should inject the FROM header correctly when no canonical name."""
